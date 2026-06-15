@@ -59,8 +59,6 @@ resource "docker_container" "workspace" {
     read_only      = false
   }
 
-  # DNS
-  dns = ["1.1.1.1", "8.8.8.8"]
 
   # Hostname
   hostname = local.workspace_name
