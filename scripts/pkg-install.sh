@@ -6,6 +6,34 @@ LOCK_DIR="/var/run/lock/install_dep.lock"
 HOOKS_DIR="/etc/pkg-install-hooks.d"
 mkdir -p "$(dirname "$LOCK_DIR")" "$HOOKS_DIR"
 
+# ── Install from .deb file ──
+if [ "${1:-}" = "--deb" ]; then
+  shift
+  for deb in "$@"; do
+    if [ ! -f "$deb" ]; then
+      echo "❌ File not found: $deb"
+      exit 1
+    fi
+    # Extract the package name from the .deb and skip if already installed
+    pkg_name=$(dpkg-deb --showformat='${Package}' --show "$deb")
+    if dpkg -s "$pkg_name" >/dev/null 2>&1; then
+      echo "✅ Already installed: $pkg_name"
+      continue
+    fi
+    echo "📦 Installing from file: $deb ($pkg_name)"
+    while ! mkdir "$LOCK_DIR" 2>/dev/null; do
+      echo "⏳ Waiting for another install to finish..."
+      sleep 2
+    done
+    trap 'rm -rf "$LOCK_DIR"' EXIT
+    apt-get -o DPkg::Lock::Timeout=-1 install -y --no-install-recommends "$deb"
+    rm -rf "$LOCK_DIR"
+    trap - EXIT
+    echo "✅ $pkg_name installed"
+  done
+  exit 0
+fi
+
 # ── Handle apt packages ──
 missing=()
 for pkg in "$@"; do

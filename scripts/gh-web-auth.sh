@@ -1,9 +1,11 @@
 #!/bin/bash
 set -euo pipefail
 
-# Install gh-web-auth via .deb if not present
+# Ensure dependencies are installed via pkg-install
+pkg-install curl jq
+
+# Install gh-web-auth via .deb from GitHub Releases
 if ! command -v gh-web-auth >/dev/null 2>&1; then
-  echo "📦 Installing gh-web-auth..."
   ARCH=$(dpkg --print-architecture)
   DEB_URL=$(curl -sfL https://api.github.com/repos/Eun/gh-web-auth/releases/latest \
     | jq -r ".assets[] | select(.name | endswith(\"linux_${ARCH}.deb\")) | .browser_download_url")
@@ -11,11 +13,9 @@ if ! command -v gh-web-auth >/dev/null 2>&1; then
     echo "❌ No gh-web-auth .deb found for arch: $ARCH"
     exit 1
   fi
-  echo "⬇️  Downloading: $DEB_URL"
   curl -sfL -o /tmp/gh-web-auth.deb "$DEB_URL"
-  sudo dpkg -i /tmp/gh-web-auth.deb
+  pkg-install --deb /tmp/gh-web-auth.deb
   rm -f /tmp/gh-web-auth.deb
-  echo "✅ gh-web-auth installed"
 fi
 
 # gh-web-auth reads config from env vars set by Terraform:
