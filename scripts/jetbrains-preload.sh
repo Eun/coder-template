@@ -1,7 +1,8 @@
 #!/bin/bash
 # Pre-download JetBrains IDE backend so Gateway doesn't have to.
-# The backend is cached on the persistent volume under
-# ~/.cache/JetBrains/RemoteDev/dist/ — subsequent starts are instant.
+# The backend is stored on the persistent volume (/home/coder) and
+# symlinked to $HOME/.cache/JetBrains/RemoteDev/dist/ where Gateway
+# expects to find it.
 set -euo pipefail
 
 # Ensure curl and jq are available
@@ -20,15 +21,26 @@ if [ -z "$IDE_BUILD" ]; then
   exit 1
 fi
 
+# Gateway looks for backends in $HOME/.cache/JetBrains/RemoteDev/dist/
+# but $HOME is /root which is NOT on the persistent volume (/home/coder).
+# Store the actual data on the persistent volume and symlink it.
+PERSISTENT_DIR="/home/coder/.cache/JetBrains/RemoteDev/dist"
 DIST_DIR="$HOME/.cache/JetBrains/RemoteDev/dist"
 
-# Check if the exact build is already cached
-if [ -d "$DIST_DIR" ] && find "$DIST_DIR" -maxdepth 2 -name "product-info.json" -exec grep -l "$IDE_BUILD" {} + >/dev/null 2>&1; then
-  echo "IDE backend build $IDE_BUILD already cached in $DIST_DIR, skipping download."
-  exit 0
+mkdir -p "$PERSISTENT_DIR"
+mkdir -p "$(dirname "$DIST_DIR")"
+
+# Symlink so Gateway finds the backend at the expected path
+if [ ! -L "$DIST_DIR" ]; then
+  rm -rf "$DIST_DIR"
+  ln -sf "$PERSISTENT_DIR" "$DIST_DIR"
 fi
 
-mkdir -p "$DIST_DIR"
+# Check if the exact build is already cached
+if find "$PERSISTENT_DIR" -maxdepth 2 -name "product-info.json" -exec grep -l "$IDE_BUILD" {} + >/dev/null 2>&1; then
+  echo "IDE backend build $IDE_BUILD already cached, skipping download."
+  exit 0
+fi
 
 echo "Fetching release info for $IDE_CODE build $IDE_BUILD..."
 RELEASE_JSON=$(curl -fsSL "https://data.services.jetbrains.com/products/releases?code=${IDE_CODE}&build=${IDE_BUILD}")
@@ -80,7 +92,7 @@ wait "$CURL_PID"
 DOWNLOADED_MB=$(( $(stat -c%s "$TMP_FILE" 2>/dev/null || stat -f%z "$TMP_FILE" 2>/dev/null) / 1024 / 1024 ))
 echo "Download complete (${DOWNLOADED_MB} MB). Extracting..."
 
-tar xzf "$TMP_FILE" -C "$DIST_DIR"
+tar xzf "$TMP_FILE" -C "$PERSISTENT_DIR"
 rm -f "$TMP_FILE"
 
-echo "IDE backend pre-downloaded to $DIST_DIR"
+echo "IDE backend pre-downloaded to $PERSISTENT_DIR (symlinked from $DIST_DIR)"
