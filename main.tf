@@ -121,6 +121,6 @@ resource "coder_script" "jetbrains_preload" {
   display_name       = "Pre-download JetBrains IDE"
   icon               = "/icon/jetbrains-toolbox.svg"
   run_on_start       = true
-  start_blocks_login = true
+  start_blocks_login = false
   script             = file("${path.module}/scripts/jetbrains-preload.sh")
 }
