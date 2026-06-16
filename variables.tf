@@ -145,8 +145,8 @@ data "coder_parameter" "disk_gb" {
 
 # ─── IDE Selection ───
 
-data "coder_parameter" "jetbrains_ide" {
-  name         = "jetbrains_ide"
+data "coder_parameter" "jetbrains_ide_selection" {
+  name         = "jetbrains_ide_selection"
   display_name = "JetBrains IDE (optional)"
   description  = "JetBrains IDE to use via Gateway. Leave 'None' to skip JetBrains setup."
   type         = "string"

@@ -27,14 +27,14 @@ resource "coder_agent" "main" {
     GITHUB_TOKEN        = data.coder_parameter.github_token.value
     DOTFILES_REPO       = data.coder_parameter.dotfiles_repo.value
     GH_WEB_AUTH_BASE_PATH = "/@${data.coder_workspace_owner.me.name}/${data.coder_workspace.me.name}.${local.agent_name}/apps/gh-web-auth/"
-    JETBRAINS_IDE_CODE    = data.coder_parameter.jetbrains_ide.value
+    JETBRAINS_IDE_CODE    = data.coder_parameter.jetbrains_ide_selection.value
     JETBRAINS_IDE_BUILD   = local.jetbrains_ide_build
   }
 
   # ─── Agent Metadata (shown in Coder dashboard) ───
 
   dynamic "metadata" {
-    for_each = data.coder_parameter.jetbrains_ide.value != "none" ? [1] : []
+    for_each = data.coder_parameter.jetbrains_ide_selection.value != "none" ? [1] : []
     content {
       key          = "jetbrains_status"
       display_name = "JetBrains IDE"

@@ -86,14 +86,14 @@ module "code-server" {
 # ─── JetBrains IDE (via Gateway) ───
 
 module "jetbrains" {
-  count          = data.coder_parameter.jetbrains_ide.value != "none" ? data.coder_workspace.me.start_count : 0
+  count          = data.coder_parameter.jetbrains_ide_selection.value != "none" ? data.coder_workspace.me.start_count : 0
   source         = "registry.coder.com/modules/jetbrains-gateway/coder"
   version        = "1.1.0"
   agent_id       = coder_agent.main.id
   agent_name     = local.agent_name
   folder         = "/home/coder/${data.coder_workspace.me.name}"
-  default        = data.coder_parameter.jetbrains_ide.value
-  jetbrains_ides = [data.coder_parameter.jetbrains_ide.value]
+  default        = data.coder_parameter.jetbrains_ide_selection.value
+  jetbrains_ides = [data.coder_parameter.jetbrains_ide_selection.value]
   latest         = true
 }
 
@@ -105,8 +105,8 @@ module "jetbrains" {
 # (module.jetbrains depends on coder_agent, so the agent env
 # cannot reference the module output).
 data "http" "jetbrains_release" {
-  count = data.coder_parameter.jetbrains_ide.value != "none" ? 1 : 0
-  url   = "https://data.services.jetbrains.com/products/releases?code=${data.coder_parameter.jetbrains_ide.value}&type=release&latest=true"
+  count = data.coder_parameter.jetbrains_ide_selection.value != "none" ? 1 : 0
+  url   = "https://data.services.jetbrains.com/products/releases?code=${data.coder_parameter.jetbrains_ide_selection.value}&type=release&latest=true"
 }
 
 locals {
@@ -118,7 +118,7 @@ locals {
 }
 
 resource "coder_script" "jetbrains_preload" {
-  count              = data.coder_parameter.jetbrains_ide.value != "none" ? 1 : 0
+  count              = data.coder_parameter.jetbrains_ide_selection.value != "none" ? 1 : 0
   agent_id           = coder_agent.main.id
   display_name       = "Pre-download JetBrains IDE"
   icon               = "/icon/jetbrains-toolbox.svg"
