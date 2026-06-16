@@ -31,10 +31,6 @@ DIST_DIR="$HOME/.cache/JetBrains/RemoteDev/dist"
 CACHE_DIR="/home/coder/.cache/JetBrains/RemoteDev"
 CACHED_TARBALL="$CACHE_DIR/ide-${IDE_CODE}-${IDE_BUILD}.tar.gz"
 
-# Remove stale symlink from previous approach
-if [ -L "$DIST_DIR" ]; then
-  rm -f "$DIST_DIR"
-fi
 mkdir -p "$DIST_DIR" "$CACHE_DIR"
 
 # Check if the IDE is already extracted in the dist dir
