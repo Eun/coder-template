@@ -4,6 +4,9 @@
 # ~/.cache/JetBrains/RemoteDev/dist/ — subsequent starts are instant.
 set -euo pipefail
 
+# Ensure curl and jq are available
+pkg-install curl jq
+
 IDE_CODE="${JETBRAINS_IDE_CODE:-}"
 if [ -z "$IDE_CODE" ] || [ "$IDE_CODE" = "none" ]; then
   echo "No JetBrains IDE selected, skipping preload."
