@@ -92,6 +92,14 @@ module "jetbrains" {
 
 # ─── JetBrains IDE Preload ───
 
+locals {
+  jetbrains_ide_build = (
+    data.coder_parameter.jetbrains_ide.value != "none" && length(module.jetbrains) > 0
+    ? module.jetbrains[0].ide_metadata[data.coder_parameter.jetbrains_ide.value].build
+    : ""
+  )
+}
+
 resource "coder_script" "jetbrains_preload" {
   count              = data.coder_parameter.jetbrains_ide.value != "none" ? 1 : 0
   agent_id           = coder_agent.main.id

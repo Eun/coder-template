@@ -28,6 +28,7 @@ resource "coder_agent" "main" {
     DOTFILES_REPO       = data.coder_parameter.dotfiles_repo.value
     GH_WEB_AUTH_BASE_PATH = "/@${data.coder_workspace_owner.me.name}/${data.coder_workspace.me.name}.${local.agent_name}/apps/gh-web-auth/"
     JETBRAINS_IDE_CODE    = data.coder_parameter.jetbrains_ide.value
+    JETBRAINS_IDE_BUILD   = local.jetbrains_ide_build
   }
 
   # ─── Agent Metadata (shown in Coder dashboard) ───
