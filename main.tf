@@ -82,15 +82,16 @@ module "code-server" {
 # ─── JetBrains IDE (via Gateway) ───
 
 module "jetbrains" {
-  count          = data.coder_parameter.enable_jetbrains.value == "true" ? data.coder_workspace.me.start_count : 0
-  source         = "registry.coder.com/modules/jetbrains-gateway/coder"
-  version        = "1.1.0"
-  agent_id       = coder_agent.main.id
-  agent_name     = local.agent_name
-  folder         = "/home/coder/${data.coder_workspace.me.name}"
-  default        = "GO"
-  jetbrains_ides = ["GO", "IU", "PY", "WS", "PS", "CL", "RM", "RD", "RR"]
-  latest         = true
+  count                 = data.coder_parameter.enable_jetbrains.value == "true" ? data.coder_workspace.me.start_count : 0
+  source                = "registry.coder.com/modules/jetbrains-gateway/coder"
+  version               = "1.1.0"
+  agent_id              = coder_agent.main.id
+  agent_name            = local.agent_name
+  folder                = "/home/coder/${data.coder_workspace.me.name}"
+  default               = "GO"
+  jetbrains_ides        = ["GO", "IU", "PY", "WS", "PS", "CL", "RM", "RD", "RR"]
+  latest                = true
+  coder_parameter_order = 9
 }
 
 # ─── JetBrains IDE Preload ───
