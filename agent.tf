@@ -39,8 +39,10 @@ resource "coder_agent" "main" {
       display_name = "JetBrains IDE Status"
       script       = <<-EOT
         DIST_DIR="/root/.cache/JetBrains/RemoteDev/dist"
-        if [ -d "$DIST_DIR" ] && find "$DIST_DIR" -maxdepth 2 -name ".expandSucceeded" -print -quit 2>/dev/null | grep -q .; then
-          echo "✅ ready"
+        IDE_DIR=$(find "$DIST_DIR" -maxdepth 1 -mindepth 1 -type d 2>/dev/null | head -1)
+        if [ -n "$IDE_DIR" ] && [ -f "$IDE_DIR/.expandSucceeded" ] && [ -f "$IDE_DIR/product-info.json" ]; then
+          IDE_NAME=$(jq -r '.name // "JetBrains IDE"' "$IDE_DIR/product-info.json" 2>/dev/null || echo "JetBrains IDE")
+          echo "✅ $IDE_NAME ready"
         else
           echo "⏳ preloading"
         fi
