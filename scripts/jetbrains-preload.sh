@@ -35,7 +35,12 @@ RELEASE_JSON=$(curl -fsSL "https://data.services.jetbrains.com/products/releases
 
 # The API top-level key varies per product (e.g. IIU for IntelliJ, PCP for PyCharm).
 # Extract the download link from the first product in the response.
-DOWNLOAD_URL=$(echo "$RELEASE_JSON" | jq -r '[.[]][0][0].downloads.linux.link')
+# Pick the correct download for the host architecture
+case "$(uname -m)" in
+  aarch64) DOWNLOAD_KEY="linuxARM64" ;;
+  *)       DOWNLOAD_KEY="linux" ;;
+esac
+DOWNLOAD_URL=$(echo "$RELEASE_JSON" | jq -r "[.[]][0][0].downloads.${DOWNLOAD_KEY}.link")
 
 if [ -z "$DOWNLOAD_URL" ] || [ "$DOWNLOAD_URL" = "null" ]; then
   echo "ERROR: Could not determine download URL for $IDE_CODE build $IDE_BUILD."

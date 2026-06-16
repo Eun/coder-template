@@ -208,13 +208,21 @@ data "coder_parameter" "jetbrains_ide" {
 
 # ─── Architecture ───
 
-variable "arch" {
-  description = "CPU architecture for the Coder agent (amd64 or arm64)"
-  type        = string
-  default     = "amd64"
+data "coder_parameter" "arch" {
+  name         = "arch"
+  display_name = "Architecture"
+  description  = "CPU architecture of the Docker host. Must match the host running Docker (e.g. arm64 for Apple Silicon / OrbStack)."
+  type         = "string"
+  default      = "amd64"
+  mutable      = false
+  order        = 13
 
-  validation {
-    condition     = contains(["amd64", "arm64"], var.arch)
-    error_message = "arch must be 'amd64' or 'arm64'"
+  option {
+    name  = "amd64 (Intel/AMD)"
+    value = "amd64"
+  }
+  option {
+    name  = "arm64 (Apple Silicon / ARM)"
+    value = "arm64"
   }
 }
