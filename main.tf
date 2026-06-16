@@ -88,3 +88,15 @@ module "jetbrains" {
   default  = [data.coder_parameter.jetbrains_ide.value]
   options  = [data.coder_parameter.jetbrains_ide.value]
 }
+
+# ─── JetBrains IDE Preload ───
+
+resource "coder_script" "jetbrains_preload" {
+  count              = data.coder_parameter.jetbrains_ide.value != "none" ? 1 : 0
+  agent_id           = coder_agent.main.id
+  display_name       = "Pre-download JetBrains IDE"
+  icon               = "/icon/jetbrains-toolbox.svg"
+  run_on_start       = true
+  start_blocks_login = true
+  script             = file("${path.module}/scripts/jetbrains-preload.sh")
+}

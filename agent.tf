@@ -27,6 +27,7 @@ resource "coder_agent" "main" {
     GITHUB_TOKEN        = data.coder_parameter.github_token.value
     DOTFILES_REPO       = data.coder_parameter.dotfiles_repo.value
     GH_WEB_AUTH_BASE_PATH = "/@${data.coder_workspace_owner.me.name}/${data.coder_workspace.me.name}.${local.agent_name}/apps/gh-web-auth/"
+    JETBRAINS_IDE_CODE    = data.coder_parameter.jetbrains_ide.value
   }
 
   # ─── Agent Metadata (shown in Coder dashboard) ───
