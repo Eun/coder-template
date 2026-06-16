@@ -4,7 +4,7 @@
 
 resource "coder_agent" "main" {
   os   = "linux"
-  arch = data.coder_parameter.arch.value
+  arch = data.coder_provisioner.me.arch
 
   startup_script_behavior = "blocking"
 

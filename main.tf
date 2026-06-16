@@ -34,6 +34,7 @@ provider "coder" {}
 
 data "coder_workspace" "me" {}
 data "coder_workspace_owner" "me" {}
+data "coder_provisioner" "me" {}
 
 locals {
   agent_name     = "main"

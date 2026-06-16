@@ -206,23 +206,4 @@ data "coder_parameter" "jetbrains_ide" {
   }
 }
 
-# ─── Architecture ───
 
-data "coder_parameter" "arch" {
-  name         = "arch"
-  display_name = "Architecture"
-  description  = "CPU architecture of the Docker host. Must match the host running Docker (e.g. arm64 for Apple Silicon / OrbStack)."
-  type         = "string"
-  default      = "amd64"
-  mutable      = false
-  order        = 13
-
-  option {
-    name  = "amd64 (Intel/AMD)"
-    value = "amd64"
-  }
-  option {
-    name  = "arm64 (Apple Silicon / ARM)"
-    value = "arm64"
-  }
-}
