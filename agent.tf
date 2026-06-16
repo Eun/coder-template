@@ -37,7 +37,7 @@ resource "coder_agent" "main" {
     for_each = data.coder_parameter.jetbrains_ide_selection.value != "none" ? [1] : []
     content {
       key          = "jetbrains_status"
-      display_name = "JetBrains IDE Status"
+      display_name = "${lookup(local.jetbrains_ide_names, data.coder_parameter.jetbrains_ide_selection.value, "JetBrains IDE")} Status"
       script       = <<-EOT
         IDE_DIR="/root/.cache/JetBrains/RemoteDev/dist/$${JETBRAINS_IDE_CODE}-$${JETBRAINS_IDE_BUILD}"
         if [ -f "$IDE_DIR/.expandSucceeded" ] && [ -f "$IDE_DIR/product-info.json" ]; then
