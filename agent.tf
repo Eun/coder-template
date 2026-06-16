@@ -65,6 +65,24 @@ resource "coder_agent" "main" {
     timeout      = 5
   }
 
+  dynamic "metadata" {
+    for_each = data.coder_parameter.jetbrains_ide.value != "none" ? [1] : []
+    content {
+      key          = "jetbrains_status"
+      display_name = "JetBrains IDE"
+      script       = <<-EOT
+        IDE_DIR="/root/.cache/JetBrains/RemoteDev/dist/$${JETBRAINS_IDE_CODE}-$${JETBRAINS_IDE_BUILD}"
+        if [ -f "$IDE_DIR/.expandSucceeded" ] && [ -f "$IDE_DIR/product-info.json" ]; then
+          echo "✅ ready"
+        else
+          echo "⏳ preloading"
+        fi
+      EOT
+      interval     = 10
+      timeout      = 5
+    }
+  }
+
   metadata {
     key          = "gh_auth_status"
     display_name = "GitHub Auth"
