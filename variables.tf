@@ -6,7 +6,7 @@
 
 data "coder_parameter" "git_user_name" {
   name         = "git_user_name"
-  display_name = "Git Name (optional)"
+  display_name = "Git Name"
   description  = "Your name for git commits (git config user.name)."
   type         = "string"
   default      = ""
@@ -16,7 +16,7 @@ data "coder_parameter" "git_user_name" {
 
 data "coder_parameter" "git_user_email" {
   name         = "git_user_email"
-  display_name = "Git Email (optional)"
+  display_name = "Git Email"
   description  = "Your email for git commits (git config user.email)."
   type         = "string"
   default      = ""
@@ -26,7 +26,7 @@ data "coder_parameter" "git_user_email" {
 
 data "coder_parameter" "git_repo" {
   name         = "git_repo"
-  display_name = "Git Repository URL (optional)"
+  display_name = "Git Repository URL"
   description  = "Repository to clone directly into /home/coder/<workspace-name> (not nested in a subfolder). Leave empty to start fresh."
   type         = "string"
   default      = ""
@@ -36,7 +36,7 @@ data "coder_parameter" "git_repo" {
 
 data "coder_parameter" "git_branch" {
   name         = "git_branch"
-  display_name = "Git Branch (optional)"
+  display_name = "Git Branch"
   description  = "Branch to check out. Leave empty for the default branch."
   type         = "string"
   default      = ""
@@ -46,7 +46,7 @@ data "coder_parameter" "git_branch" {
 
 data "coder_parameter" "dotfiles_repo" {
   name         = "dotfiles_repo"
-  display_name = "Dotfiles Repository (optional)"
+  display_name = "Dotfiles Repository"
   description  = "URL to your dotfiles repo. Applied via 'coder dotfiles' on startup."
   type         = "string"
   default      = ""
@@ -56,7 +56,7 @@ data "coder_parameter" "dotfiles_repo" {
 
 data "coder_parameter" "github_token" {
   name         = "github_token"
-  display_name = "GitHub Token (optional)"
+  display_name = "GitHub Token"
   description  = "Personal access token for GitHub CLI (gh). Used for PR operations, repo access, etc."
   type         = "string"
   default      = ""
@@ -145,14 +145,56 @@ data "coder_parameter" "disk_gb" {
 
 # ─── IDE Selection ───
 
+data "coder_parameter" "install_code_server" {
+  name         = "install_code_server"
+  display_name = "code-server (VS Code in Browser)"
+  description  = "Enable code-server (VS Code in the browser) on port 13337."
+  type         = "bool"
+  default      = "true"
+  mutable      = true
+  order        = 7
+
+  option {
+    name  = "Yes"
+    value = "true"
+    icon  = "/icon/code.svg"
+  }
+  option {
+    name  = "No"
+    value = "false"
+    icon  = "/emojis/274c.png"
+  }
+}
+
+data "coder_parameter" "install_gh" {
+  name         = "install_gh"
+  display_name = "GitHub CLI (gh)"
+  description  = "Install the GitHub CLI (gh) and gh-web-auth for browser-based GitHub authentication."
+  type         = "bool"
+  default      = "true"
+  mutable      = true
+  order        = 8
+
+  option {
+    name  = "Yes"
+    value = "true"
+    icon  = "/icon/github.svg"
+  }
+  option {
+    name  = "No"
+    value = "false"
+    icon  = "/emojis/274c.png"
+  }
+}
+
 data "coder_parameter" "jetbrains_ide_selection" {
   name         = "jetbrains_ide_selection"
-  display_name = "JetBrains IDE (optional)"
+  display_name = "JetBrains IDE"
   description  = "JetBrains IDE to use via Gateway. Leave 'None' to skip JetBrains setup."
   type         = "string"
   default      = "none"
   mutable      = true
-  order        = 7
+  order        = 9
 
   option {
     name  = "None"

@@ -73,7 +73,7 @@ resource "coder_script" "git_signing" {
 
 
 module "code-server" {
-  count     = data.coder_workspace.me.start_count
+  count     = data.coder_parameter.install_code_server.value == "true" ? data.coder_workspace.me.start_count : 0
   source    = "registry.coder.com/coder/code-server/coder"
   version   = "1.5.0"
   agent_id  = coder_agent.main.id
@@ -120,7 +120,7 @@ locals {
 resource "coder_script" "jetbrains_preload" {
   count              = data.coder_parameter.jetbrains_ide_selection.value != "none" ? 1 : 0
   agent_id           = coder_agent.main.id
-  display_name       = "Pre-download JetBrains IDE"
+  display_name       = "JetBrains IDE Preload"
   icon               = "/icon/jetbrains-toolbox.svg"
   run_on_start       = true
   start_blocks_login = false

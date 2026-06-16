@@ -37,7 +37,7 @@ resource "coder_agent" "main" {
     for_each = data.coder_parameter.jetbrains_ide_selection.value != "none" ? [1] : []
     content {
       key          = "jetbrains_status"
-      display_name = "JetBrains IDE"
+      display_name = "JetBrains IDE Status"
       script       = <<-EOT
         IDE_DIR="/root/.cache/JetBrains/RemoteDev/dist/$${JETBRAINS_IDE_CODE}-$${JETBRAINS_IDE_BUILD}"
         if [ -f "$IDE_DIR/.expandSucceeded" ] && [ -f "$IDE_DIR/product-info.json" ]; then
@@ -52,30 +52,36 @@ resource "coder_agent" "main" {
     }
   }
 
-  metadata {
-    key          = "code_server_status"
-    display_name = "code-server"
-    script       = "curl -s http://localhost:13337/healthz >/dev/null 2>&1 && echo '✅ running' || echo '⏳ starting'"
-    interval     = 10
-    timeout      = 5
-    order        = 2
+  dynamic "metadata" {
+    for_each = data.coder_parameter.install_code_server.value == "true" ? [1] : []
+    content {
+      key          = "code_server_status"
+      display_name = "code-server Status"
+      script       = "curl -s http://localhost:13337/healthz >/dev/null 2>&1 && echo '✅ running' || echo '⏳ starting'"
+      interval     = 10
+      timeout      = 5
+      order        = 2
+    }
   }
 
-  metadata {
-    key          = "gh_auth_status"
-    display_name = "GitHub Auth"
-    script       = <<-EOT
-      resp=$(curl -sf http://localhost:18515/api/status 2>/dev/null) || { echo "⏳ starting"; exit 0; }
-      user=$(echo "$resp" | jq -r '.user // empty' 2>/dev/null)
-      if [ -n "$user" ]; then
-        echo "✅ $user"
-      else
-        echo "❌ not authenticated"
-      fi
-    EOT
-    interval     = 10
-    timeout      = 5
-    order        = 3
+  dynamic "metadata" {
+    for_each = data.coder_parameter.install_gh.value == "true" ? [1] : []
+    content {
+      key          = "gh_auth_status"
+      display_name = "GitHub Authentication"
+      script       = <<-EOT
+        resp=$(curl -sf http://localhost:18515/api/status 2>/dev/null) || { echo "⏳ starting"; exit 0; }
+        user=$(echo "$resp" | jq -r '.user // empty' 2>/dev/null)
+        if [ -n "$user" ]; then
+          echo "✅ $user"
+        else
+          echo "❌ not authenticated"
+        fi
+      EOT
+      interval     = 10
+      timeout      = 5
+      order        = 3
+    }
   }
 
   metadata {
@@ -114,7 +120,7 @@ resource "coder_agent" "main" {
 
 resource "coder_script" "configure_mise" {
   agent_id           = coder_agent.main.id
-  display_name       = "Install mise"
+  display_name       = "Mise Installation"
   icon               = "/icon/coder.svg"
   run_on_start       = true
   start_blocks_login = true
@@ -134,11 +140,12 @@ resource "coder_script" "git_config" {
   script             = file("${path.module}/scripts/git-config.sh")
 }
 
-# ── GitHub CLI Authentication (optional) ──
+# ── GitHub CLI Configuration (optional) ──
 
 resource "coder_script" "configure_gh" {
+  count              = data.coder_parameter.install_gh.value == "true" ? 1 : 0
   agent_id           = coder_agent.main.id
-  display_name       = "GitHub CLI Auth"
+  display_name       = "GitHub CLI Configuration"
   icon               = "/icon/github.svg"
   run_on_start       = true
   start_blocks_login = true
@@ -148,8 +155,9 @@ resource "coder_script" "configure_gh" {
 # ── gh-web-auth (GitHub OAuth web UI) ──
 
 resource "coder_script" "gh_web_auth" {
+  count              = data.coder_parameter.install_gh.value == "true" ? 1 : 0
   agent_id           = coder_agent.main.id
-  display_name       = "gh-web-auth"
+  display_name       = "GitHub Web Authentication"
   icon               = "/icon/github.svg"
   run_on_start       = true
   start_blocks_login = false
@@ -157,9 +165,10 @@ resource "coder_script" "gh_web_auth" {
 }
 
 resource "coder_app" "gh_web_auth" {
+  count        = data.coder_parameter.install_gh.value == "true" ? 1 : 0
   agent_id     = coder_agent.main.id
   slug         = "gh-web-auth"
-  display_name = "GitHub Auth"
+  display_name = "GitHub Authentication"
   icon         = "/icon/github.svg"
   url          = "http://localhost:18515"
   subdomain    = false
@@ -178,7 +187,7 @@ resource "coder_app" "gh_web_auth" {
 resource "coder_script" "dotfiles" {
   count              = data.coder_parameter.dotfiles_repo.value != "" ? 1 : 0
   agent_id           = coder_agent.main.id
-  display_name       = "Dotfiles"
+  display_name       = "Dotfiles Configuration"
   icon               = "/icon/dotfiles.svg"
   run_on_start       = true
   start_blocks_login = true
