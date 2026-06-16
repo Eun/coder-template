@@ -20,10 +20,6 @@ terraform {
       source  = "kreuzwerker/docker"
       version = ">= 3.0.0"
     }
-    http = {
-      source  = "hashicorp/http"
-      version = ">= 3.0.0"
-    }
   }
 }
 
@@ -86,54 +82,25 @@ module "code-server" {
 # ─── JetBrains IDE (via Gateway) ───
 
 module "jetbrains" {
-  count          = data.coder_parameter.jetbrains_ide_selection.value != "none" ? data.coder_workspace.me.start_count : 0
+  count          = data.coder_parameter.enable_jetbrains.value == "true" ? data.coder_workspace.me.start_count : 0
   source         = "registry.coder.com/modules/jetbrains-gateway/coder"
   version        = "1.1.0"
   agent_id       = coder_agent.main.id
   agent_name     = local.agent_name
   folder         = "/home/coder/${data.coder_workspace.me.name}"
-  default        = data.coder_parameter.jetbrains_ide_selection.value
-  jetbrains_ides = [data.coder_parameter.jetbrains_ide_selection.value]
+  default        = "GO"
+  jetbrains_ides = ["GO", "IU", "PY", "WS", "PS", "CL", "RM", "RD", "RR"]
   latest         = true
 }
 
 # ─── JetBrains IDE Preload ───
 
-# Fetch the latest build number for the selected IDE at plan time.
-# This is the same API call the jetbrains module makes internally,
-# but done independently to avoid a dependency cycle
-# (module.jetbrains depends on coder_agent, so the agent env
-# cannot reference the module output).
-data "http" "jetbrains_release" {
-  count = data.coder_parameter.jetbrains_ide_selection.value != "none" ? 1 : 0
-  url   = "https://data.services.jetbrains.com/products/releases?code=${data.coder_parameter.jetbrains_ide_selection.value}&type=release&latest=true"
-}
-
-locals {
-  jetbrains_ide_names = {
-    GO = "GoLand"
-    IU = "IntelliJ IDEA Ultimate"
-    PY = "PyCharm Professional"
-    WS = "WebStorm"
-    PS = "PhpStorm"
-    CL = "CLion"
-    RM = "RubyMine"
-    RD = "Rider"
-    RR = "RustRover"
-  }
-  jetbrains_ide_build = (
-    length(data.http.jetbrains_release) > 0
-    ? jsondecode(data.http.jetbrains_release[0].response_body)[keys(jsondecode(data.http.jetbrains_release[0].response_body))[0]][0].build
-    : ""
-  )
-}
-
 resource "coder_script" "jetbrains_preload" {
-  count              = data.coder_parameter.jetbrains_ide_selection.value != "none" ? 1 : 0
+  count              = length(module.jetbrains) > 0 ? 1 : 0
   agent_id           = coder_agent.main.id
-  display_name       = "${lookup(local.jetbrains_ide_names, data.coder_parameter.jetbrains_ide_selection.value, "JetBrains IDE")} Preload"
+  display_name       = "${module.jetbrains[0].display_name} Preload"
   icon               = "/icon/jetbrains-toolbox.svg"
   run_on_start       = true
   start_blocks_login = false
-  script             = file("${path.module}/scripts/jetbrains-preload.sh")
+  script             = "export JETBRAINS_IDE_CODE=\"${module.jetbrains[0].identifier}\"\nexport JETBRAINS_IDE_BUILD=\"${module.jetbrains[0].build_number}\"\n${file("${path.module}/scripts/jetbrains-preload.sh")}"
 }

@@ -27,20 +27,19 @@ resource "coder_agent" "main" {
     GITHUB_TOKEN        = data.coder_parameter.github_token.value
     DOTFILES_REPO       = data.coder_parameter.dotfiles_repo.value
     GH_WEB_AUTH_BASE_PATH = "/@${data.coder_workspace_owner.me.name}/${data.coder_workspace.me.name}.${local.agent_name}/apps/gh-web-auth/"
-    JETBRAINS_IDE_CODE    = data.coder_parameter.jetbrains_ide_selection.value
-    JETBRAINS_IDE_BUILD   = local.jetbrains_ide_build
+
   }
 
   # ─── Agent Metadata (shown in Coder dashboard) ───
 
   dynamic "metadata" {
-    for_each = data.coder_parameter.jetbrains_ide_selection.value != "none" ? [1] : []
+    for_each = data.coder_parameter.enable_jetbrains.value == "true" ? [1] : []
     content {
       key          = "jetbrains_status"
-      display_name = "${lookup(local.jetbrains_ide_names, data.coder_parameter.jetbrains_ide_selection.value, "JetBrains IDE")} Status"
+      display_name = "JetBrains IDE Status"
       script       = <<-EOT
-        IDE_DIR="/root/.cache/JetBrains/RemoteDev/dist/$${JETBRAINS_IDE_CODE}-$${JETBRAINS_IDE_BUILD}"
-        if [ -f "$IDE_DIR/.expandSucceeded" ] && [ -f "$IDE_DIR/product-info.json" ]; then
+        DIST_DIR="/root/.cache/JetBrains/RemoteDev/dist"
+        if [ -d "$DIST_DIR" ] && find "$DIST_DIR" -maxdepth 2 -name ".expandSucceeded" -print -quit 2>/dev/null | grep -q .; then
           echo "✅ ready"
         else
           echo "⏳ preloading"

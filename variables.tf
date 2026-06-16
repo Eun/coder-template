@@ -187,64 +187,24 @@ data "coder_parameter" "install_gh" {
   }
 }
 
-data "coder_parameter" "jetbrains_ide_selection" {
-  name         = "jetbrains_ide_selection"
+data "coder_parameter" "enable_jetbrains" {
+  name         = "enable_jetbrains"
   display_name = "JetBrains IDE"
-  description  = "JetBrains IDE to use via Gateway. Leave 'None' to skip JetBrains setup."
-  type         = "string"
-  default      = "none"
+  description  = "Enable JetBrains IDE selection via Gateway."
+  type         = "bool"
+  default      = "true"
   mutable      = true
   order        = 9
 
   option {
-    name  = "None"
-    value = "none"
+    name  = "Yes"
+    value = "true"
+    icon  = "/icon/gateway.svg"
+  }
+  option {
+    name  = "No"
+    value = "false"
     icon  = "/emojis/274c.png"
-  }
-  option {
-    name  = "GoLand"
-    value = "GO"
-    icon  = "/icon/goland.svg"
-  }
-  option {
-    name  = "IntelliJ IDEA Ultimate"
-    value = "IU"
-    icon  = "/icon/intellij.svg"
-  }
-  option {
-    name  = "PyCharm Professional"
-    value = "PY"
-    icon  = "/icon/pycharm.svg"
-  }
-  option {
-    name  = "WebStorm"
-    value = "WS"
-    icon  = "/icon/webstorm.svg"
-  }
-  option {
-    name  = "PhpStorm"
-    value = "PS"
-    icon  = "/icon/phpstorm.svg"
-  }
-  option {
-    name  = "CLion"
-    value = "CL"
-    icon  = "/icon/clion.svg"
-  }
-  option {
-    name  = "RubyMine"
-    value = "RM"
-    icon  = "/icon/rubymine.svg"
-  }
-  option {
-    name  = "Rider"
-    value = "RD"
-    icon  = "/icon/rider.svg"
-  }
-  option {
-    name  = "RustRover"
-    value = "RR"
-    icon  = "/icon/rustrover.svg"
   }
 }
 
