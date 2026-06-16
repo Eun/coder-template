@@ -94,7 +94,6 @@ module "jetbrains" {
   folder     = "/home/coder/${data.coder_workspace.me.name}"
   default    = [data.coder_parameter.jetbrains_ide.value]
   options    = [data.coder_parameter.jetbrains_ide.value]
-  order      = 1
 }
 
 # ─── JetBrains IDE Preload ───
