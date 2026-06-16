@@ -47,6 +47,40 @@ if [ -z "$DOWNLOAD_URL" ] || [ "$DOWNLOAD_URL" = "null" ]; then
   exit 1
 fi
 
-echo "Downloading $IDE_CODE (build $IDE_BUILD) from $DOWNLOAD_URL ..."
-curl -fSL "$DOWNLOAD_URL" | tar xz -C "$DIST_DIR"
+# Get file size for progress reporting
+FILE_SIZE=$(curl -fsSLI "$DOWNLOAD_URL" | grep -i content-length | tail -1 | tr -dc '0-9')
+FILE_SIZE_MB=$(( FILE_SIZE / 1024 / 1024 ))
+
+echo "Downloading $IDE_CODE (build $IDE_BUILD) — ${FILE_SIZE_MB} MB"
+echo "  URL: $DOWNLOAD_URL"
+
+TMP_FILE=$(mktemp /tmp/jetbrains-ide-XXXXXX.tar.gz)
+trap 'rm -f "$TMP_FILE"' EXIT
+
+# Download to temp file, printing progress every 5 seconds
+curl -fSL -o "$TMP_FILE" "$DOWNLOAD_URL" &
+CURL_PID=$!
+
+while kill -0 "$CURL_PID" 2>/dev/null; do
+  sleep 5
+  if [ -f "$TMP_FILE" ]; then
+    CURRENT=$(stat -c%s "$TMP_FILE" 2>/dev/null || stat -f%z "$TMP_FILE" 2>/dev/null || echo 0)
+    CURRENT_MB=$(( CURRENT / 1024 / 1024 ))
+    if [ "$FILE_SIZE" -gt 0 ]; then
+      PCT=$(( CURRENT * 100 / FILE_SIZE ))
+      echo "  Progress: ${CURRENT_MB} / ${FILE_SIZE_MB} MB (${PCT}%)"
+    else
+      echo "  Progress: ${CURRENT_MB} MB downloaded"
+    fi
+  fi
+done
+
+wait "$CURL_PID"
+
+DOWNLOADED_MB=$(( $(stat -c%s "$TMP_FILE" 2>/dev/null || stat -f%z "$TMP_FILE" 2>/dev/null) / 1024 / 1024 ))
+echo "Download complete (${DOWNLOADED_MB} MB). Extracting..."
+
+tar xzf "$TMP_FILE" -C "$DIST_DIR"
+rm -f "$TMP_FILE"
+
 echo "IDE backend pre-downloaded to $DIST_DIR"
