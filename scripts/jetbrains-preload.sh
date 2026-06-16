@@ -1,8 +1,14 @@
 #!/bin/bash
 # Pre-download JetBrains IDE backend so Gateway doesn't have to.
-# The backend is stored on the persistent volume (/home/coder) and
-# symlinked to $HOME/.cache/JetBrains/RemoteDev/dist/ where Gateway
-# expects to find it.
+#
+# The remote-dev-worker that Gateway uses to detect installed IDEs does NOT
+# follow symlinks, so we must extract directly to the dist dir it expects
+# ($HOME/.cache/JetBrains/RemoteDev/dist/).
+#
+# Since $HOME is /root (not on the persistent volume), the extracted IDE is
+# lost on container restart. To avoid re-downloading every time, we cache
+# the tarball on the persistent volume and re-extract from it on subsequent
+# starts.
 set -euo pipefail
 
 # Ensure curl and jq are available
@@ -21,33 +27,31 @@ if [ -z "$IDE_BUILD" ]; then
   exit 1
 fi
 
-# Gateway looks for backends in $HOME/.cache/JetBrains/RemoteDev/dist/
-# but $HOME is /root which is NOT on the persistent volume (/home/coder).
-# Store the actual data on the persistent volume and symlink it.
-PERSISTENT_DIR="/home/coder/.cache/JetBrains/RemoteDev/dist"
 DIST_DIR="$HOME/.cache/JetBrains/RemoteDev/dist"
+CACHE_DIR="/home/coder/.cache/JetBrains/RemoteDev"
+CACHED_TARBALL="$CACHE_DIR/ide-${IDE_CODE}-${IDE_BUILD}.tar.gz"
 
-mkdir -p "$PERSISTENT_DIR"
-mkdir -p "$(dirname "$DIST_DIR")"
+mkdir -p "$DIST_DIR" "$CACHE_DIR"
 
-# Symlink so Gateway finds the backend at the expected path
-if [ ! -L "$DIST_DIR" ]; then
-  rm -rf "$DIST_DIR"
-  ln -sf "$PERSISTENT_DIR" "$DIST_DIR"
-fi
-
-# Check if the exact build is already cached
-if [ -n "$(find "$PERSISTENT_DIR" -maxdepth 2 -name "product-info.json" 2>/dev/null)" ] && \
-   find "$PERSISTENT_DIR" -maxdepth 2 -name "product-info.json" -exec grep -l "$IDE_BUILD" {} + >/dev/null 2>&1; then
-  echo "IDE backend build $IDE_BUILD already cached, skipping download."
+# Check if the IDE is already extracted in the dist dir
+if [ -n "$(find "$DIST_DIR" -maxdepth 2 -name "product-info.json" 2>/dev/null)" ] && \
+   find "$DIST_DIR" -maxdepth 2 -name "product-info.json" -exec grep -l "$IDE_BUILD" {} + >/dev/null 2>&1; then
+  echo "IDE backend build $IDE_BUILD already installed in $DIST_DIR."
   exit 0
 fi
 
+# If we have a cached tarball, extract from it (fast — no download needed)
+if [ -f "$CACHED_TARBALL" ]; then
+  echo "Found cached tarball, extracting $IDE_CODE build $IDE_BUILD..."
+  tar xzf "$CACHED_TARBALL" -C "$DIST_DIR"
+  echo "IDE backend extracted to $DIST_DIR"
+  exit 0
+fi
+
+# Download the IDE
 echo "Fetching release info for $IDE_CODE build $IDE_BUILD..."
 RELEASE_JSON=$(curl -fsSL "https://data.services.jetbrains.com/products/releases?code=${IDE_CODE}&build=${IDE_BUILD}")
 
-# The API top-level key varies per product (e.g. IIU for IntelliJ, PCP for PyCharm).
-# Extract the download link from the first product in the response.
 # Pick the correct download for the host architecture
 case "$(uname -m)" in
   aarch64) DOWNLOAD_KEY="linuxARM64" ;;
@@ -67,17 +71,14 @@ FILE_SIZE_MB=$(( FILE_SIZE / 1024 / 1024 ))
 echo "Downloading $IDE_CODE (build $IDE_BUILD) — ${FILE_SIZE_MB} MB"
 echo "  URL: $DOWNLOAD_URL"
 
-TMP_FILE=$(mktemp /tmp/jetbrains-ide-XXXXXX.tar.gz)
-trap 'rm -f "$TMP_FILE"' EXIT
-
-# Download to temp file, printing progress every 5 seconds
-curl -fSL -o "$TMP_FILE" "$DOWNLOAD_URL" &
+# Download to the persistent cache location
+curl -fSL -o "$CACHED_TARBALL.tmp" "$DOWNLOAD_URL" &
 CURL_PID=$!
 
 while kill -0 "$CURL_PID" 2>/dev/null; do
   sleep 5
-  if [ -f "$TMP_FILE" ]; then
-    CURRENT=$(stat -c%s "$TMP_FILE" 2>/dev/null || stat -f%z "$TMP_FILE" 2>/dev/null || echo 0)
+  if [ -f "$CACHED_TARBALL.tmp" ]; then
+    CURRENT=$(stat -c%s "$CACHED_TARBALL.tmp" 2>/dev/null || stat -f%z "$CACHED_TARBALL.tmp" 2>/dev/null || echo 0)
     CURRENT_MB=$(( CURRENT / 1024 / 1024 ))
     if [ "$FILE_SIZE" -gt 0 ]; then
       PCT=$(( CURRENT * 100 / FILE_SIZE ))
@@ -89,11 +90,13 @@ while kill -0 "$CURL_PID" 2>/dev/null; do
 done
 
 wait "$CURL_PID"
+mv "$CACHED_TARBALL.tmp" "$CACHED_TARBALL"
 
-DOWNLOADED_MB=$(( $(stat -c%s "$TMP_FILE" 2>/dev/null || stat -f%z "$TMP_FILE" 2>/dev/null) / 1024 / 1024 ))
+DOWNLOADED_MB=$(( $(stat -c%s "$CACHED_TARBALL" 2>/dev/null || stat -f%z "$CACHED_TARBALL" 2>/dev/null) / 1024 / 1024 ))
 echo "Download complete (${DOWNLOADED_MB} MB). Extracting..."
 
-tar xzf "$TMP_FILE" -C "$PERSISTENT_DIR"
-rm -f "$TMP_FILE"
+# Remove old cached tarballs for different builds
+find "$CACHE_DIR" -maxdepth 1 -name "ide-${IDE_CODE}-*.tar.gz" ! -name "ide-${IDE_CODE}-${IDE_BUILD}.tar.gz" -delete 2>/dev/null || true
 
-echo "IDE backend pre-downloaded to $PERSISTENT_DIR (symlinked from $DIST_DIR)"
+tar xzf "$CACHED_TARBALL" -C "$DIST_DIR"
+echo "IDE backend installed to $DIST_DIR (tarball cached at $CACHED_TARBALL)"
