@@ -110,6 +110,17 @@ data "http" "jetbrains_release" {
 }
 
 locals {
+  jetbrains_ide_names = {
+    GO = "GoLand"
+    IU = "IntelliJ IDEA Ultimate"
+    PY = "PyCharm Professional"
+    WS = "WebStorm"
+    PS = "PhpStorm"
+    CL = "CLion"
+    RM = "RubyMine"
+    RD = "Rider"
+    RR = "RustRover"
+  }
   jetbrains_ide_build = (
     length(data.http.jetbrains_release) > 0
     ? jsondecode(data.http.jetbrains_release[0].response_body)[keys(jsondecode(data.http.jetbrains_release[0].response_body))[0]][0].build
@@ -120,7 +131,7 @@ locals {
 resource "coder_script" "jetbrains_preload" {
   count              = data.coder_parameter.jetbrains_ide_selection.value != "none" ? 1 : 0
   agent_id           = coder_agent.main.id
-  display_name       = "JetBrains IDE Preload"
+  display_name       = "${lookup(local.jetbrains_ide_names, data.coder_parameter.jetbrains_ide_selection.value, "JetBrains IDE")} Preload"
   icon               = "/icon/jetbrains-toolbox.svg"
   run_on_start       = true
   start_blocks_login = false
