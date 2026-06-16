@@ -3,9 +3,9 @@
 #
 # The remote-dev-worker that Gateway uses to detect installed IDEs does NOT
 # follow symlinks, so we must extract directly to the dist dir it expects
-# ($HOME/.cache/JetBrains/RemoteDev/dist/).
+# (/root/.cache/JetBrains/RemoteDev/dist/).
 #
-# Since $HOME is /root (not on the persistent volume), the extracted IDE is
+# Since /root is not on the persistent volume, the extracted IDE is
 # lost on container restart. To avoid re-downloading every time, we cache
 # the tarball on the persistent volume and re-extract from it on subsequent
 # starts.
@@ -27,7 +27,7 @@ if [ -z "$IDE_BUILD" ]; then
   exit 1
 fi
 
-DIST_DIR="$HOME/.cache/JetBrains/RemoteDev/dist"
+DIST_DIR="/root/.cache/JetBrains/RemoteDev/dist"
 CACHE_DIR="/home/coder/.cache/JetBrains/RemoteDev"
 CACHED_TARBALL="$CACHE_DIR/ide-${IDE_CODE}-${IDE_BUILD}.tar.gz"
 
