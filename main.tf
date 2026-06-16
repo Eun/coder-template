@@ -74,11 +74,11 @@ resource "coder_script" "git_signing" {
 
 module "code-server" {
   count     = data.coder_workspace.me.start_count
-  source    = "registry.coder.com/coder/code-server/coder"
-  version   = "1.5.0"
+  source    = "./modules/code-server"
   agent_id  = coder_agent.main.id
   folder    = "/home/coder/${data.coder_workspace.me.name}"
   port      = 13337
+  icon      = "/icon/code-insiders.svg"
   subdomain = false
 }
 
