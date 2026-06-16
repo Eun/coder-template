@@ -37,7 +37,8 @@ if [ ! -L "$DIST_DIR" ]; then
 fi
 
 # Check if the exact build is already cached
-if find "$PERSISTENT_DIR" -maxdepth 2 -name "product-info.json" -exec grep -l "$IDE_BUILD" {} + >/dev/null 2>&1; then
+if [ -n "$(find "$PERSISTENT_DIR" -maxdepth 2 -name "product-info.json" 2>/dev/null)" ] && \
+   find "$PERSISTENT_DIR" -maxdepth 2 -name "product-info.json" -exec grep -l "$IDE_BUILD" {} + >/dev/null 2>&1; then
   echo "IDE backend build $IDE_BUILD already cached, skipping download."
   exit 0
 fi
