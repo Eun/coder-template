@@ -33,38 +33,6 @@ resource "coder_agent" "main" {
 
   # ─── Agent Metadata (shown in Coder dashboard) ───
 
-  metadata {
-    key          = "cpu"
-    display_name = "CPU Cores"
-    script       = "nproc"
-    interval     = 60
-    timeout      = 5
-  }
-
-  metadata {
-    key          = "memory"
-    display_name = "Memory Usage"
-    script       = "free -h | awk '/Mem:/ {print $3 \" / \" $2}'"
-    interval     = 60
-    timeout      = 5
-  }
-
-  metadata {
-    key          = "disk"
-    display_name = "Disk Usage"
-    script       = "df -h /home/coder | awk 'NR==2 {print $3 \" / \" $2}'"
-    interval     = 300
-    timeout      = 5
-  }
-
-  metadata {
-    key          = "code_server_status"
-    display_name = "code-server"
-    script       = "curl -s http://localhost:13337/healthz >/dev/null 2>&1 && echo '✅ running' || echo '⏳ starting'"
-    interval     = 10
-    timeout      = 5
-  }
-
   dynamic "metadata" {
     for_each = data.coder_parameter.jetbrains_ide.value != "none" ? [1] : []
     content {
@@ -80,7 +48,17 @@ resource "coder_agent" "main" {
       EOT
       interval     = 10
       timeout      = 5
+      order        = 1
     }
+  }
+
+  metadata {
+    key          = "code_server_status"
+    display_name = "code-server"
+    script       = "curl -s http://localhost:13337/healthz >/dev/null 2>&1 && echo '✅ running' || echo '⏳ starting'"
+    interval     = 10
+    timeout      = 5
+    order        = 2
   }
 
   metadata {
@@ -97,6 +75,34 @@ resource "coder_agent" "main" {
     EOT
     interval     = 10
     timeout      = 5
+    order        = 3
+  }
+
+  metadata {
+    key          = "cpu"
+    display_name = "CPU Cores"
+    script       = "nproc"
+    interval     = 60
+    timeout      = 5
+    order        = 4
+  }
+
+  metadata {
+    key          = "memory"
+    display_name = "Memory Usage"
+    script       = "free -h | awk '/Mem:/ {print $3 \" / \" $2}'"
+    interval     = 60
+    timeout      = 5
+    order        = 5
+  }
+
+  metadata {
+    key          = "disk"
+    display_name = "Disk Usage"
+    script       = "df -h /home/coder | awk 'NR==2 {print $3 \" / \" $2}'"
+    interval     = 300
+    timeout      = 5
+    order        = 6
   }
 }
 
@@ -158,6 +164,7 @@ resource "coder_app" "gh_web_auth" {
   url          = "http://localhost:18515"
   subdomain    = false
   share        = "owner"
+  order        = 3
 
   healthcheck {
     url       = "http://localhost:18515/api/status"
