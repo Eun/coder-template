@@ -20,6 +20,10 @@ terraform {
       source  = "kreuzwerker/docker"
       version = ">= 3.0.0"
     }
+    http = {
+      source  = "hashicorp/http"
+      version = ">= 3.0.0"
+    }
   }
 }
 
@@ -92,10 +96,20 @@ module "jetbrains" {
 
 # ─── JetBrains IDE Preload ───
 
+# Fetch the latest build number for the selected IDE at plan time.
+# This is the same API call the jetbrains module makes internally,
+# but done independently to avoid a dependency cycle
+# (module.jetbrains depends on coder_agent, so the agent env
+# cannot reference the module output).
+data "http" "jetbrains_release" {
+  count = data.coder_parameter.jetbrains_ide.value != "none" ? 1 : 0
+  url   = "https://data.services.jetbrains.com/products/releases?code=${data.coder_parameter.jetbrains_ide.value}&type=release&latest=true"
+}
+
 locals {
   jetbrains_ide_build = (
-    data.coder_parameter.jetbrains_ide.value != "none" && length(module.jetbrains) > 0
-    ? module.jetbrains[0].ide_metadata[data.coder_parameter.jetbrains_ide.value].build
+    length(data.http.jetbrains_release) > 0
+    ? jsondecode(data.http.jetbrains_release[0].response_body)[keys(jsondecode(data.http.jetbrains_release[0].response_body))[0]][0].build
     : ""
   )
 }
