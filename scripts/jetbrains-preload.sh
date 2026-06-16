@@ -33,18 +33,44 @@ CACHED_TARBALL="$CACHE_DIR/ide-${IDE_CODE}-${IDE_BUILD}.tar.gz"
 
 mkdir -p "$DIST_DIR" "$CACHE_DIR"
 
-# Check if the IDE is already extracted in the dist dir
-if [ -n "$(find "$DIST_DIR" -maxdepth 2 -name "product-info.json" 2>/dev/null)" ] && \
-   find "$DIST_DIR" -maxdepth 2 -name "product-info.json" -exec grep -l "$IDE_BUILD" {} + >/dev/null 2>&1; then
-  echo "IDE backend build $IDE_BUILD already installed in $DIST_DIR."
+# Extract tarball and rename the inner directory to the <CODE>-<BUILD> format
+# that Gateway expects (e.g. IU-261.25134.95), then create the
+# .expandSucceeded marker so Gateway recognises the installation.
+extract_and_rename() {
+  local tarball="$1"
+  local tmp_extract="$DIST_DIR/.extract-tmp-$$"
+  rm -rf "$tmp_extract"
+  mkdir -p "$tmp_extract"
+  tar xzf "$tarball" -C "$tmp_extract"
+
+  # The tarball contains a single top-level dir (e.g. idea-IU-261.25134.95)
+  local inner
+  inner=$(ls -1 "$tmp_extract" | head -1)
+
+  # Move to the name Gateway expects
+  rm -rf "$IDE_DIR"
+  mv "$tmp_extract/$inner" "$IDE_DIR"
+  rm -rf "$tmp_extract"
+
+  # Create the sentinel file Gateway checks
+  touch "$IDE_DIR/.expandSucceeded"
+  echo "IDE backend extracted to $IDE_DIR"
+}
+
+# Gateway expects the IDE at $DIST_DIR/<CODE>-<BUILD> (e.g. IU-261.25134.95)
+# with a .expandSucceeded marker file inside it.
+IDE_DIR="$DIST_DIR/${IDE_CODE}-${IDE_BUILD}"
+
+# Check if the IDE is already correctly installed
+if [ -f "$IDE_DIR/.expandSucceeded" ] && [ -f "$IDE_DIR/product-info.json" ]; then
+  echo "IDE backend build $IDE_BUILD already installed in $IDE_DIR."
   exit 0
 fi
 
 # If we have a cached tarball, extract from it (fast — no download needed)
 if [ -f "$CACHED_TARBALL" ]; then
   echo "Found cached tarball, extracting $IDE_CODE build $IDE_BUILD..."
-  tar xzf "$CACHED_TARBALL" -C "$DIST_DIR"
-  echo "IDE backend extracted to $DIST_DIR"
+  extract_and_rename "$CACHED_TARBALL"
   exit 0
 fi
 
@@ -98,5 +124,5 @@ echo "Download complete (${DOWNLOADED_MB} MB). Extracting..."
 # Remove old cached tarballs for different builds
 find "$CACHE_DIR" -maxdepth 1 -name "ide-${IDE_CODE}-*.tar.gz" ! -name "ide-${IDE_CODE}-${IDE_BUILD}.tar.gz" -delete 2>/dev/null || true
 
-tar xzf "$CACHED_TARBALL" -C "$DIST_DIR"
-echo "IDE backend installed to $DIST_DIR (tarball cached at $CACHED_TARBALL)"
+extract_and_rename "$CACHED_TARBALL"
+echo "IDE backend installed to $IDE_DIR (tarball cached at $CACHED_TARBALL)"
