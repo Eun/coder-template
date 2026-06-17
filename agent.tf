@@ -120,12 +120,23 @@ resource "coder_agent" "main" {
 # ── Install Dependencies ──
 
 resource "coder_script" "configure_mise" {
+  count              = data.coder_parameter.install_mise.value == "true" ? 1 : 0
   agent_id           = coder_agent.main.id
   display_name       = "Mise Installation"
   icon               = "/icon/coder.svg"
   run_on_start       = true
   start_blocks_login = true
   script             = file("${path.module}/scripts/configure-mise.sh")
+}
+
+resource "coder_script" "additional_packages" {
+  count              = data.coder_parameter.additional_packages.value != "" ? 1 : 0
+  agent_id           = coder_agent.main.id
+  display_name       = "Additional Packages"
+  icon               = "/icon/coder.svg"
+  run_on_start       = true
+  start_blocks_login = true
+  script             = "#!/bin/bash\npkg-install ${data.coder_parameter.additional_packages.value}"
 }
 
 

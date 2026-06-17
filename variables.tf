@@ -44,6 +44,50 @@ data "coder_parameter" "git_branch" {
   order        = 4
 }
 
+# ─── IDE Selection ───
+
+data "coder_parameter" "install_code_server" {
+  name         = "install_code_server"
+  display_name = "code-server (VS Code in Browser)"
+  description  = "Enable code-server (VS Code in the browser) on port 13337."
+  type         = "bool"
+  default      = "true"
+  mutable      = true
+  order        = 5
+
+  option {
+    name  = "Yes"
+    value = "true"
+    icon  = "/icon/code.svg"
+  }
+  option {
+    name  = "No"
+    value = "false"
+    icon  = "/emojis/274c.png"
+  }
+}
+
+data "coder_parameter" "enable_jetbrains" {
+  name         = "enable_jetbrains"
+  display_name = "JetBrains IDE"
+  description  = "Enable JetBrains IDE selection via Gateway."
+  type         = "bool"
+  default      = "true"
+  mutable      = true
+  order        = 6
+
+  option {
+    name  = "Yes"
+    value = "true"
+    icon  = "/icon/gateway.svg"
+  }
+  option {
+    name  = "No"
+    value = "false"
+    icon  = "/emojis/274c.png"
+  }
+}
+
 data "coder_parameter" "dotfiles_repo" {
   name         = "dotfiles_repo"
   display_name = "Dotfiles Repository"
@@ -51,7 +95,7 @@ data "coder_parameter" "dotfiles_repo" {
   type         = "string"
   default      = ""
   mutable      = true
-  order        = 5
+  order        = 8
 }
 
 data "coder_parameter" "github_token" {
@@ -61,7 +105,50 @@ data "coder_parameter" "github_token" {
   type         = "string"
   default      = ""
   mutable      = true
-  order        = 6
+  order        = 9
+}
+
+data "coder_parameter" "install_gh" {
+  name         = "install_gh"
+  display_name = "GitHub CLI (gh)"
+  description  = "Install the GitHub CLI (gh) and gh-web-auth for browser-based GitHub authentication."
+  type         = "bool"
+  default      = "true"
+  mutable      = true
+  order        = 10
+
+  option {
+    name  = "Yes"
+    value = "true"
+    icon  = "/icon/github.svg"
+  }
+  option {
+    name  = "No"
+    value = "false"
+    icon  = "/emojis/274c.png"
+  }
+}
+
+# ─── Tools ───
+
+data "coder_parameter" "install_mise" {
+  name         = "install_mise"
+  display_name = "Mise (Dev Tool Manager)"
+  description  = "Install mise — a polyglot dev tool version manager (replaces asdf, nvm, pyenv, etc.)."
+  type         = "bool"
+  default      = "true"
+  mutable      = true
+  order        = 11
+
+  option {
+    name  = "Yes"
+    value = "true"
+  }
+  option {
+    name  = "No"
+    value = "false"
+    icon  = "/emojis/274c.png"
+  }
 }
 
 # ─── Resource Limits ───
@@ -73,7 +160,7 @@ data "coder_parameter" "cpu_cores" {
   type         = "number"
   default      = "4"
   mutable      = true
-  order        = 10
+  order        = 12
 
   option {
     name  = "2 cores (Light)"
@@ -96,7 +183,7 @@ data "coder_parameter" "memory_gb" {
   type         = "number"
   default      = "4"
   mutable      = true
-  order        = 11
+  order        = 13
 
   option {
     name  = "2 GB (Light)"
@@ -123,7 +210,7 @@ data "coder_parameter" "disk_gb" {
   type         = "number"
   default      = "20"
   mutable      = true
-  order        = 12
+  order        = 14
 
   option {
     name  = "10 GB (Light)"
@@ -143,69 +230,14 @@ data "coder_parameter" "disk_gb" {
   }
 }
 
-# ─── IDE Selection ───
+# ─── Additional Packages ───
 
-data "coder_parameter" "install_code_server" {
-  name         = "install_code_server"
-  display_name = "code-server (VS Code in Browser)"
-  description  = "Enable code-server (VS Code in the browser) on port 13337."
-  type         = "bool"
-  default      = "true"
+data "coder_parameter" "additional_packages" {
+  name         = "additional_packages"
+  display_name = "Additional Packages"
+  description  = "Space-separated list of extra packages to install via pkg-install (e.g. 'htop vim wget'). Leave empty for none."
+  type         = "string"
+  default      = ""
   mutable      = true
-  order        = 7
-
-  option {
-    name  = "Yes"
-    value = "true"
-    icon  = "/icon/code.svg"
-  }
-  option {
-    name  = "No"
-    value = "false"
-    icon  = "/emojis/274c.png"
-  }
+  order        = 15
 }
-
-data "coder_parameter" "install_gh" {
-  name         = "install_gh"
-  display_name = "GitHub CLI (gh)"
-  description  = "Install the GitHub CLI (gh) and gh-web-auth for browser-based GitHub authentication."
-  type         = "bool"
-  default      = "true"
-  mutable      = true
-  order        = 8
-
-  option {
-    name  = "Yes"
-    value = "true"
-    icon  = "/icon/github.svg"
-  }
-  option {
-    name  = "No"
-    value = "false"
-    icon  = "/emojis/274c.png"
-  }
-}
-
-data "coder_parameter" "enable_jetbrains" {
-  name         = "enable_jetbrains"
-  display_name = "JetBrains IDE"
-  description  = "Enable JetBrains IDE selection via Gateway."
-  type         = "bool"
-  default      = "true"
-  mutable      = true
-  order        = 9
-
-  option {
-    name  = "Yes"
-    value = "true"
-    icon  = "/icon/gateway.svg"
-  }
-  option {
-    name  = "No"
-    value = "false"
-    icon  = "/emojis/274c.png"
-  }
-}
-
-

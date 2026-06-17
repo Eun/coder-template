@@ -91,7 +91,7 @@ module "jetbrains" {
   default               = "GO"
   jetbrains_ides        = ["GO", "IU", "PY", "WS", "PS", "CL", "RM", "RD", "RR"]
   latest                = true
-  coder_parameter_order = 9
+  coder_parameter_order = 7
 }
 
 # ─── JetBrains IDE Preload ───
