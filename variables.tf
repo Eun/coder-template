@@ -154,7 +154,7 @@ data "coder_parameter" "install_mise" {
 data "coder_parameter" "install_graphify" {
   name         = "install_graphify"
   display_name = "graphifyy"
-  description  = "Install the graphifyy CLI via 'uv tool install graphifyy' (falls back to 'pipx install graphifyy')."
+  description  = "Install the graphifyy CLI via 'pipx install graphifyy'."
   type         = "bool"
   default      = "false"
   mutable      = true
