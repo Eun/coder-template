@@ -151,6 +151,26 @@ data "coder_parameter" "install_mise" {
   }
 }
 
+data "coder_parameter" "install_graphify" {
+  name         = "install_graphify"
+  display_name = "graphifyy"
+  description  = "Install the graphifyy CLI via 'pipx install graphifyy'."
+  type         = "bool"
+  default      = "false"
+  mutable      = true
+  order        = 16
+
+  option {
+    name  = "Yes"
+    value = "true"
+  }
+  option {
+    name  = "No"
+    value = "false"
+    icon  = "/emojis/274c.png"
+  }
+}
+
 # ─── Resource Limits ───
 
 data "coder_parameter" "cpu_cores" {
