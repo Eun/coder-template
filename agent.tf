@@ -139,6 +139,18 @@ resource "coder_script" "additional_packages" {
   script             = "#!/bin/bash\npkg-install ${data.coder_parameter.additional_packages.value}"
 }
 
+# ── graphifyy CLI (optional) ──
+
+resource "coder_script" "install_graphify" {
+  count              = data.coder_parameter.install_graphify.value == "true" ? 1 : 0
+  agent_id           = coder_agent.main.id
+  display_name       = "graphifyy Installation"
+  icon               = "/icon/coder.svg"
+  run_on_start       = true
+  start_blocks_login = true
+  script             = file("${path.module}/scripts/install-graphify.sh")
+}
+
 
 
 # ── Git Configuration ──
