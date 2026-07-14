@@ -28,6 +28,12 @@ resource "coder_agent" "main" {
     DOTFILES_REPO       = data.coder_parameter.dotfiles_repo.value
     GH_WEB_AUTH_BASE_PATH = "/@${data.coder_workspace_owner.me.name}/${data.coder_workspace.me.name}.${local.agent_name}/apps/gh-web-auth/"
 
+    # Go private module settings — bypass public proxy & checksum DB
+    # for all github.com packages so `go get` works with private repos.
+    GOPRIVATE    = "github.com"
+    GONOSUMCHECK = "github.com"
+    GONOPROXY    = "github.com"
+    GOFLAGS      = "-mod=mod"
   }
 
   # ─── Agent Metadata (shown in Coder dashboard) ───
@@ -217,4 +223,3 @@ resource "coder_script" "dotfiles" {
   start_blocks_login = true
   script             = file("${path.module}/scripts/dotfiles.sh")
 }
-

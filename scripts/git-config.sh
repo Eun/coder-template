@@ -18,4 +18,10 @@ if [ -n "${GIT_AUTHOR_EMAIL:-}" ]; then
   echo "→ git user.email = $GIT_AUTHOR_EMAIL"
 fi
 
+# Rewrite github.com HTTPS URLs to SSH so Go (and git) can fetch
+# private modules using the workspace SSH key instead of requiring
+# a token embedded in the URL.
+git config --global url."git@github.com:".insteadOf "https://github.com/"
+echo "→ git url.insteadOf: https://github.com/ → git@github.com:"
+
 echo "✅ Git configured"
